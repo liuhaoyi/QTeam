@@ -1,0 +1,27 @@
+.left{
+    float: left;
+    width: 510px;
+    background-color: blue;
+    margin-right: -300px;
+}
+.right{
+    float: right;
+    width: 90px;
+    background-color: yellow;
+}
+
+.width{
+    width: 100%;
+    margin:0 auto; 
+    text-align:center; 
+}
+.send_form{
+    display:flex;
+}
+
+.send_message{
+    display: flex;
+}
+.send_message_field{
+    flex:1;
+}
