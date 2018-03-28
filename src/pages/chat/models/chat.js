@@ -12,6 +12,7 @@ export default{
         //     body:'',
         //     time:''
         // }
+        
     },
     reducers:{
         send(state,{payload:{recv_messages}}){
