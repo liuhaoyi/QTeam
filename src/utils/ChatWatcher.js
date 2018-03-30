@@ -1,4 +1,6 @@
 import $ from 'jquery';
+import{Strophe} from 'strophe';
+
 class ChatWatcher{
     constructor(props){
         this.connection = null;

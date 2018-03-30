@@ -1,6 +1,6 @@
 import {connect} from 'dva';
 import {Component} from 'react';
-import Modal, { Input, Button ,List} from 'antd';
+import Modal, { Input, Button ,Menu,Icon} from 'antd';
 import styles from "./Chat.css";
 import{Strophe} from 'strophe';
 "use strict";
@@ -8,11 +8,14 @@ import{Strophe} from 'strophe';
 class Chat extends Component{
     constructor(props){
         super();
-        this.state={send_message:''};
+        this.state={
+            send_message:'',
+            chat_roster:'',
+        };
     }
     sendMessageHandler=()=>{
         if(this.state.send_message=='') return ;
-        let to = 'l1@server1';
+        let to = this.state.chat_roster;
         let type = 'chat';
         let body = this.state.send_message;
         let isSended = window.ChatWatcher.sendMessage(to,type,body);
@@ -27,19 +30,47 @@ class Chat extends Component{
         }
     }
     getRoster=()=>{
-        window.ChatWatcher.sendRosterIq();
+        // window.ChatWatcher.sendRosterIq();
+        this.props.dispatch({
+            type:'chat/fetchRosters',
+            payload:{id:"31"},
+        });
+    }
+    rosterItemClick=(item)=>{
+        alert(item);
+    }
+    handleClick=(e)=>{
+        //alert(e.key);
+        this.setState({chat_roster:e.key});
     }
     render(){
         const { TextArea } = Input;
+        const SubMenu = Menu.SubMenu;
+        
         return(
             <div className={styles.send_form}>
                 <div>
-                <List
-                    header={<div>好友列表</div>}
-                    bordered
-                    dataSource={this.props.rosters}
-                    renderItem={item => (<List.Item>{item}</List.Item>)}
-                    />
+                        <Menu
+                            onClick={this.handleClick}
+                            style={{ width: 256 }}
+                            defaultSelectedKeys={['1']}
+                            defaultOpenKeys={['sub2']}
+                            mode="inline"
+                        >
+                            <SubMenu key="sub2" title={<span><Icon type="appstore" /><span>Navigation Two</span></span>}>
+                            {
+                                this.props.rosters.map((item)=>{
+                                    return <Menu.Item key={item}>{item}</Menu.Item>
+                                })
+                            }
+                            </SubMenu>
+                            <SubMenu key="sub4" title={<span><Icon type="setting" /><span>Navigation Three</span></span>}>
+                                <Menu.Item key="9">Option 9</Menu.Item>
+                                <Menu.Item key="10">Option 10</Menu.Item>
+                                <Menu.Item key="11">Option 11</Menu.Item>
+                                <Menu.Item key="12">Option 12</Menu.Item>
+                            </SubMenu>
+                        </Menu>
                 </div>
                 <div>
                     {/* <div className={styles.send_message}>
@@ -56,6 +87,9 @@ class Chat extends Component{
                             <Button default onClick={this.connect}>登录</Button>
                         </div>
                     </div> */}
+                    <div>
+                        {this.state.chat_roster}
+                    </div>
                     <div>
                         <TextArea ref="txtRecv" placeholder="接收消息" rows={10} value={this.props.recv_messages}/>
                     </div>
