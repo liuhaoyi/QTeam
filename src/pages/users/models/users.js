@@ -52,7 +52,7 @@ export default{
         },
         chatwatcher({dispatch}){
             return window.ChatWatcher.chatEvent((from,type,data)=>{
-                alert("users--->from=" + from + ";data="+data);
+                // alert("users--->from=" + from + ";data="+data);
            });  
         }
     },

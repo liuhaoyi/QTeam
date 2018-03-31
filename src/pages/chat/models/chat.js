@@ -1,30 +1,62 @@
 import ChatWatcher from '../../../utils/ChatWatcher'
 import * as service from '../services/chat'
+import * as Jid from '../../../utils/Jid'
 export default{
     namespace:"chat",
     state:{
         recv_messages:[],
+        // recv_messages:[{
+        //     from:'l1@server1',
+        //     to:'liuhaoyi@server1',
+        //     body:'nihao',
+        //     time:'2017-03-30 17:20:20',
+        //     type:'RECV'}],
         rosters:[],
         send_message:'',
         chat_roster:'',
-        // json{
-        //     type:'s',//s:发送消息；r：接收消息；
-        //     from:'',
-        //     to:'',
-        //     body:'',
-        //     time:''
-        // }
+        roster2messages:[],
     },
     reducers:{
         send(state,{payload:{recv_messages}}){
-            return{...state,recv_messages:state.recv_messages.concat(recv_messages)};
+            state.recv_messages = state.recv_messages.concat(recv_messages);
+            let roster2messages = state.recv_messages.filter((item)=>{
+                // let pos = item.from.indexOf('/');
+                // let fromBareJid = item.from;
+                // if(pos>0) {
+                //     fromBareJid = item.from.substring(0,pos);
+                // }
+                // pos = item.to.indexOf('/');
+                // let toBareJid = item.to;
+                // if(pos>0) {
+                //     toBareJid = item.to.substring(0,pos);
+                // }
+                let fromBareJid = Jid.getBareJid(item.from);
+                let toBareJid = Jid.getBareJid(item.to);
+                return fromBareJid==state.chat_roster || toBareJid==state.chat_roster;
+            });
+            return{...state,roster2messages:roster2messages};
         },
         receive(state,{payload:{recv_messages}}){
-            return{...state,recv_messages:state.recv_messages.concat(recv_messages)};
+            state.recv_messages = state.recv_messages.concat(recv_messages);
+            let roster2messages = state.recv_messages.filter((item)=>{
+                let fromBareJid = Jid.getBareJid(item.from);
+                let toBareJid = Jid.getBareJid(item.to);
+                return fromBareJid==state.chat_roster || toBareJid==state.chat_roster;
+            });
+            return{...state,roster2messages:roster2messages};
         },
         getRosters(state,{payload:{rosters}}){
             return{...state,rosters:rosters};
         },
+        getRoster2Messages(state,{payload:{chat_roster}}){
+            state.chat_roster = chat_roster;
+            let roster2messages = state.recv_messages.filter((item)=>{
+                let fromBareJid = Jid.getBareJid(item.from);
+                let toBareJid = Jid.getBareJid(item.to);
+                return fromBareJid==state.chat_roster || toBareJid==state.chat_roster;
+            });
+            return{...state,roster2messages:roster2messages,chat_roster:chat_roster};
+        }
     },
     effects:{
         *fetchRosters({payload:id},{put,select,call}){
@@ -44,16 +76,22 @@ export default{
     subscriptions:{
         watcherChatEvent({dispatch}){
            return window.ChatWatcher.chatEvent((from,type,data)=>{
-                let v = from + "---" + data+"\n";
+                let v = {
+                            from:from,
+                            to:window.ChatWatcher.myJid,
+                            body:data,
+                            time:'',
+                            type:'RECV',
+                        };
                 dispatch({
-                    type:'chat/receive',
+                    type:'receive',
                     payload:{recv_messages:[v]},
                 });
            });
         },
         connectWatcher({dispatch}){
             return window.ChatWatcher.connectionListen((status)=>{
-                 alert(status);   
+                //  alert(status);   
             });
         },
         rosterWatcher({dispatch}){

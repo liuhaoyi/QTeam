@@ -23,7 +23,15 @@ class Chat extends Component{
             let v = window.ChatWatcher.myJid + "---" + body +"\n";
             this.props.dispatch({
                 type:'chat/send',
-                payload:{recv_messages:[v]},
+                payload:{recv_messages:[
+                    {
+                        from:window.ChatWatcher.myJid,
+                        to:to,
+                        body:body,
+                        time:'',
+                        type:'SEND'
+                    }
+                ]},
             });
            // e.target.value="";
            this.setState({send_message:''});
@@ -40,8 +48,11 @@ class Chat extends Component{
         alert(item);
     }
     handleClick=(e)=>{
-        //alert(e.key);
         this.setState({chat_roster:e.key});
+        this.props.dispatch({
+            type:'chat/getRoster2Messages',
+            payload:{chat_roster:e.key},
+        });
     }
     render(){
         const { TextArea } = Input;
@@ -91,7 +102,9 @@ class Chat extends Component{
                         {this.state.chat_roster}
                     </div>
                     <div>
-                        <TextArea ref="txtRecv" placeholder="接收消息" rows={10} value={this.props.recv_messages}/>
+                        <TextArea ref="txtRecv" placeholder="接收消息" rows={10} value={this.props.roster2messages.map((item)=>{
+                            return item.from +" ::: " + item.body + "\n"; 
+                        })}/>
                     </div>
                     <div className={styles.send_message}>
                         <div className={styles.send_message_field}>
@@ -109,7 +122,7 @@ class Chat extends Component{
 }
 
 function mapStateToProps(state){
-    const {recv_messages,rosters,send_message} =state.chat;
-    return {recv_messages,rosters,send_message};
+    const {recv_messages,rosters,send_message,chat_roster,roster2messages} =state.chat;
+    return {recv_messages,rosters,send_message,chat_roster,roster2messages};
 }
 export default connect(mapStateToProps)(Chat)
