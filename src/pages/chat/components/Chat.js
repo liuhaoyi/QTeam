@@ -33,7 +33,6 @@ class Chat extends Component{
                     }
                 ]},
             });
-           // e.target.value="";
            this.setState({send_message:''});
         }
     }

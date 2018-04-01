@@ -1,13 +1,14 @@
 import $ from 'jquery';
 import{Strophe} from 'strophe';
-
+import * as Jid from './Jid'
 class ChatWatcher{
     constructor(props){
         this.connection = null;
         this.connected =false;
         this.myJid = null;
         this.myPwd = null;
-        this.chatEvents = [];
+        this.chatEvents = []; //点对点消息事件列表；
+        this.groupChatEvents = [];  //工作组消息事件列表；
         this.connectionListens=[];
         this.rosterListens=[];
     }
@@ -34,6 +35,7 @@ class ChatWatcher{
             this.connected = true;
             // 当接收到<message>节，调用onMessage回调函数
             this.connection.addHandler(this.onMessage, null, 'message', null, null, null);
+            this.connection.addHandler(this.onPresence, null, 'presence', null, null, null);
             // 首先要发送一个<presence>给服务器（initial presence）
             this.connection.send(window.$pres().tree());
         }
@@ -42,15 +44,27 @@ class ChatWatcher{
         let from = msg.getAttribute('from');
         let type = msg.getAttribute('type');
         let elems = msg.getElementsByTagName('body');
-
+        //点对点消息；
         if (type == "chat" && elems.length > 0) {
             var body = elems[0];
             for (var event of this.chatEvents) { // 遍历Array  
                 event(from,type,window.Strophe.getText(body));  
             }
+        }else if (type == "groupchat" && elems.length > 0) {
+            //工作组消息；
+            var body = elems[0];
+            for(var event of this.groupChatEvents){
+                event(from,type,window.Strophe.getText(body));
+            }
         }
         return true;
     };
+    onPresence=(pres)=>{
+        alert(pres);
+        let from = pres.getAttribute('from');
+        let type = pres.getAttribute('type');
+        alert('from=' + from + ",type=" + type);
+    }
     sendMessage=(to,type,body)=>{
         if(this.connected){
             var msg = window.$msg({
@@ -59,6 +73,18 @@ class ChatWatcher{
                 type: type
             }).c("body", null, body);
             this.connection.send(msg);
+            return true;
+        }
+        return false;
+    };
+    sendGroupMessage=(to,body)=>{
+        if(this.connected){
+            var msg = window.$msg({
+                from: this.myJid, 
+                to: to, 
+                type: 'groupchat',
+            }).c("body", null, body);
+            this.connection.send(msg.tree());
             return true;
         }
         return false;
@@ -77,9 +103,18 @@ class ChatWatcher{
             }  
         });
     };
-    
+    //发送presence消息，加入工作组；
+    joinGroup=(groupJid)=>{
+        this.connection.send(window.$pres({
+			from: this.myJid,
+			to: groupJid + "/" + Jid.getBareJid(this.myJid)
+		}).c('x',{xmlns: 'http://jabber.org/protocol/muc'}).tree());
+    }
     chatEvent=(event)=>{
         this.chatEvents.push(event);
+    }
+    groupChatEvent=(event)=>{
+        this.groupChatEvents.push(event);
     }
     connectionListen=(action)=>{
         this.connectionListens.push(action);
