@@ -8,7 +8,7 @@ class NormalLoginForm extends React.Component {
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
       if (!err) {
-        let BOSH_SERVICE = 'http://192.168.101.41:7070/http-bind/';
+        let BOSH_SERVICE = 'http://localhost:7070/http-bind/';
         //获取登录名和密码；
         let userName = this.props.form.getFieldValue('userName');
         let password = this.props.form.getFieldValue('password');

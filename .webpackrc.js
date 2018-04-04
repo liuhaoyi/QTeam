@@ -7,7 +7,7 @@ export default {
         "pathRewrite": { "^/api" : "" }
       },
       "/of": {
-        "target": "http://192.168.101.41:8080/",
+        "target": "http://localhost:8080/",
         "changeOrigin": true,
         "pathRewrite": { "^/of" : "" }
       },
