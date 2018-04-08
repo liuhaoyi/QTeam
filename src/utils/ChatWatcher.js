@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import{Strophe} from 'strophe';
+// import { Strophejs} from 'strophejs-plugin-roster'
 import * as Jid from './Jid'
 class ChatWatcher{
     constructor(props){
@@ -15,6 +16,7 @@ class ChatWatcher{
     connect=(bosh_service,userid,domain,resource,pwd)=>{
         this.myJid = userid+'@'+domain+'/'+resource;
         this.myPwd = pwd;
+        window.Strophe.LogLevel
         this.connection = new window.Strophe.Connection(bosh_service);
         this.connection.connect(this.myJid,this.myPwd,this.onConnect);
     }
@@ -36,6 +38,12 @@ class ChatWatcher{
             // 当接收到<message>节，调用onMessage回调函数
             this.connection.addHandler(this.onMessage, null, 'message', null, null, null);
             this.connection.addHandler(this.onPresence, null, 'presence', null, null, null);
+            // this.connection.roster.init(this.connection);
+
+            // var roster;
+            // this.connection.roster.get(function (result) {
+            //     roster = result;
+            // });
             // 首先要发送一个<presence>给服务器（initial presence）
             this.connection.send(window.$pres().tree());
         }
@@ -60,10 +68,16 @@ class ChatWatcher{
         return true;
     };
     onPresence=(pres)=>{
-        alert(pres);
-        let from = pres.getAttribute('from');
-        let type = pres.getAttribute('type');
-        alert('from=' + from + ",type=" + type);
+        // let from = pres.getAttribute('from');
+        // let type = pres.getAttribute('type');
+        // alert('from=' + from + ",type=" + type);
+
+        let fromJid = $(pres).attr("from");
+        let fromBareJid = window.Strophe.getBareJidFromJid(fromJid);
+        let myBareJid = window.Strophe.getBareJidFromJid(this.connection.jid);
+        let type = $(pres).attr("type");
+        let show = $(pres).children("show").text();
+        let statusMsg = $(pres).children("status").text();
     }
     sendMessage=(to,type,body)=>{
         if(this.connected){
