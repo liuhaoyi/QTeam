@@ -41,6 +41,10 @@ class GroupChat extends React.Component{
             type:'groupchat/getGroup2Messages',
             payload:{selected_group:{groupJid:e.key,groupName:e.key}},
         });
+        this.props.dispatch({
+            type:'groupchat/fetchGroupMemberByGroupId',
+            payload:{selected_group:{groupJid:e.key,groupName:e.key}},
+        });
     }
     render(){
         const {TextArea} = Input;
@@ -56,8 +60,6 @@ class GroupChat extends React.Component{
                     >
                     {
                         this.props.groups.map((item)=>{
-                            //发送presence消息加入工作组；
-                            window.ChatWatcher.joinGroup(item.groupJid);
                             return (
                                 <Menu.Item key={item.groupJid}>
                                     <span>{item.groupName}</span>
@@ -86,14 +88,30 @@ class GroupChat extends React.Component{
                     </div>
                 </div>
                 <div>
-                    工作组成员区域
+                    工作组成员
+                <Menu
+                    defaultSelectedKeys={['1']}
+                    defaultOpenKeys={['sub1']}
+                    mode="inline"
+                    onClick={()=>{}}
+                    >
+                    {
+                        this.props.group2Members.map((item)=>{
+                            return (
+                                <Menu.Item key={item.jid}>
+                                    <span>{item.jid}({item.role})({item.status})</span>
+                                </Menu.Item>
+                            )
+                        })
+                    }
+                </Menu>
                 </div>
             </div>
         );
     }
 }
 function mapStateToProps(state){
-    const {recv_messages,group2messages,groups} =state.groupchat;
-    return {recv_messages,group2messages,groups};
+    const {recv_messages,group2messages,groups,groupMembers,group2Members} =state.groupchat;
+    return {recv_messages,group2messages,groups,groupMembers,group2Members};
 }
 export default connect(mapStateToProps)(GroupChat);

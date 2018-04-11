@@ -2,7 +2,7 @@ import {connect} from 'dva';
 import {Component} from 'react';
 import Modal, { Input, Button ,Menu,Icon} from 'antd';
 import styles from "./Chat.css";
-import{Strophe} from 'strophe';
+// import{Strophe} from 'strophe.js';
 "use strict";
 
 class Chat extends Component{
@@ -70,7 +70,7 @@ class Chat extends Component{
                             <SubMenu key="sub2" title={<span><Icon type="appstore" /><span>Navigation Two</span></span>}>
                             {
                                 this.props.rosters.map((item)=>{
-                                    return <Menu.Item key={item}>{item}</Menu.Item>
+                                    return <Menu.Item key={item.jid}>{item.jid}({item.status})</Menu.Item>
                                 })
                             }
                             </SubMenu>

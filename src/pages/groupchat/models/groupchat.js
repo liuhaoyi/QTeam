@@ -8,6 +8,30 @@ export default{
         group2messages:[],
         selected_group:{groupJid:'',groupName:'默认群组'},
         groups:[],
+        groupMembers:[],
+        group2Members:[],
+
+        // {
+        //     groupId:'',
+        //     groupMember:[
+        //         {
+        //             jid:'',
+        //             role:'',
+        //             status:'',
+        //         },
+        //     ]
+        // }
+
+        // {
+        //     groupId:'',
+        //     groupName:'',
+        //     groupMembers:[{
+        //         groupId:'',
+        //         jid:'',
+        //         role:'',
+        //         status:''
+        //     }]
+        // }
     },
     reducers:{
         send(state,{payload:{recv_messages}}){
@@ -38,23 +62,72 @@ export default{
             return{...state,group2messages:group2messages,selected_group:selected_group};
         },
         getGroups(state,{payload:{groups}}){
+            console.log("grouchat-model-groups");
+            //发送presence消息加入工作组；
+            groups.map((item)=>{
+                window.ChatWatcher.joinGroup(item.groupJid);
+            });
             return{...state,groups:groups};
-        }
+        },
+        getGroupMemberByGroupId(state,{payload:{groupId,groupMembers}}){
+            state.groupMembers = groupMembers.concat({groupId:groupId,groupMember:groupMembers});
+
+            let group2Members = state.groupMembers.filter((item)=>{
+                let _groupId = Jid.getBareJid(item.groupId);
+                return _groupId==groupId;
+            });
+            return{...state,groupMembers:groupMembers,group2Members:group2Members};
+        },
+        group2Members(state,{payload:{selected_group}}){
+            state.selected_group = selected_group;
+            let group2Members = state.groupMembers.filter((item)=>{
+                let groupId = Jid.getBareJid(item.groupId);
+                return groupId==state.selected_group.groupJid;
+            });
+            return{...state,group2Members:group2Members,selected_group:selected_group};
+        },
+        groupJidStatusEvent(state,{payload:{groupStatus}}){
+            state.groupMembers = state.groupMembers.map((item)=>{
+                if(item.jid==Jid.getBareJid(groupStatus.fromGroupUserJid)){
+                    item.status = groupStatus.status;
+                }
+                return item;
+            });
+            let group2Members = state.group2Members.map((item)=>{
+                console.log(`item.jid=${item.jid};groupStatus.fromGroupUserJid=${Jid.getBareJid(groupStatus.fromGroupUserJid)}`)
+                if(item.jid==Jid.getBareJid(groupStatus.fromGroupUserJid)){
+                    item.status = groupStatus.status;
+                }
+                return item;
+            });
+            return{...state,group2Members:group2Members};
+        },
     },
     effects:{
         *fetchGroupByUserName({payload:{userName}},{put,call}){
             const {data,headers} = yield call(service.fetchGroupByUserName,userName);
 
-            // let groups = data.map((item)=>{
-            //     return item.userName;
-            // });
+           
             yield put({
                 type:'getGroups',
                 payload:{
                     groups:data,
                 },
             });
-        }
+        },
+        *fetchGroupMemberByGroupId({payload:{selected_group}},{put,call}){
+            const {data,headers} = yield call(service.getGroupMemberByGroupId,selected_group.groupJid);
+            let _data = data.map((item)=>{
+                return {...item,status:'离线'};
+            });
+            yield put({
+                type:'getGroupMemberByGroupId',
+                payload:{
+                    groupId:selected_group.groupJid,
+                    groupMembers:_data,
+                },
+            });
+        },
     },
     subscriptions:{
         setupGroupChat({dispatch,history}){
@@ -81,6 +154,14 @@ export default{
                      payload:{recv_messages:[v]},
                  });
             });
-         },
+         }, 
+         groupJidStatusEventWatcher({dispatch}){
+            return window.ChatWatcher.groupJidStatusEvent((item)=>{
+                dispatch({
+                    type:'groupchat/groupJidStatusEvent',
+                    payload:{groupStatus:item},
+                });
+            });
+        },
     }
 }

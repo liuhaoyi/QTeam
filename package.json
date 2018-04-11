@@ -10,7 +10,7 @@
     "dva": "^2.1.0",
     "jquery": "^3.3.1",
     "keymaster": "^1.6.2",
-    "strophe": "^1.2.4",
+    "strophe.js": "^1.2.14",
     "strophejs-plugin-roster": "^1.1.0",
     "umi": "^1.0.0-0",
     "umi-plugin-dva": "^0.1.5",

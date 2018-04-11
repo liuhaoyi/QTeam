@@ -1,7 +1,11 @@
 import $ from 'jquery';
-import{Strophe} from 'strophe';
+import {Strophe,$msg,$pres} from 'strophe.js';
 // import { Strophejs} from 'strophejs-plugin-roster'
 import * as Jid from './Jid'
+window.Strophe = Strophe;
+window.$msg = $msg;
+window.$pres = $pres;
+
 class ChatWatcher{
     constructor(props){
         this.connection = null;
@@ -12,11 +16,13 @@ class ChatWatcher{
         this.groupChatEvents = [];  //工作组消息事件列表；
         this.connectionListens=[];
         this.rosterListens=[];
+        this.rosterStatusEvents = [];
+        this.groupJidStatusEvents = [];
     }
     connect=(bosh_service,userid,domain,resource,pwd)=>{
         this.myJid = userid+'@'+domain+'/'+resource;
         this.myPwd = pwd;
-        window.Strophe.LogLevel
+        // console.log(Strophe);
         this.connection = new window.Strophe.Connection(bosh_service);
         this.connection.connect(this.myJid,this.myPwd,this.onConnect);
     }
@@ -60,24 +66,63 @@ class ChatWatcher{
             }
         }else if (type == "groupchat" && elems.length > 0) {
             //工作组消息；
-            var body = elems[0];
+            var body = window.Strophe.getText(elems[0]);
             for(var event of this.groupChatEvents){
-                event(from,type,window.Strophe.getText(body));
+                console.log("groupchat=" + body);
+                event(from,type,body);
             }
         }
         return true;
     };
     onPresence=(pres)=>{
-        // let from = pres.getAttribute('from');
-        // let type = pres.getAttribute('type');
-        // alert('from=' + from + ",type=" + type);
+        try{
+            // let from = pres.getAttribute('from');
+            // let type = pres.getAttribute('type');
+            // alert('from=' + from + ",type=" + type);
+            let fromJid = $(pres).attr("from");
+            // let fromBareJid = window.Strophe.getBareJidFromJid(fromJid);
+            // let myBareJid = window.Strophe.getBareJidFromJid(this.connection.jid);
+            let type = $(pres).attr("type");
+            let show = $(pres).children("show").text();
+            let statusMsg = $(pres).children("status").text();
 
-        let fromJid = $(pres).attr("from");
-        let fromBareJid = window.Strophe.getBareJidFromJid(fromJid);
-        let myBareJid = window.Strophe.getBareJidFromJid(this.connection.jid);
-        let type = $(pres).attr("type");
-        let show = $(pres).children("show").text();
-        let statusMsg = $(pres).children("status").text();
+            let x = $(pres).children("x");
+            // <presence xmlns="jabber:client" to="liuhy@server1/pc" id="1rcFv-140" from="jsjl@conference.server1/wc">
+            //     <status>离开</status>
+            //     <priority>0</priority>
+            //     <show>away</show>
+            //     <c xmlns="http://jabber.org/protocol/caps" hash="sha-1" node="http://www.igniterealtime.org/projects/smack" ver="TJuVIXqTCVfJSthaPu4MtTbaf9A="/>
+            //     <x xmlns="http://jabber.org/protocol/muc#user">
+            //         <item jid="wc@server1/Spark 2.8.3.579" affiliation="owner" role="moderator"/>
+            //     </x>
+            // </presence>"
+            let fromGroupUserJid = null;
+            if(null!=x){
+               let ns =  x.attr("xmlns");
+               if(ns=='http://jabber.org/protocol/muc#user'){
+                   //工作组成员状态变化；
+                   fromGroupUserJid = x.children("item").attr("jid");
+               }
+            }
+
+
+            console.log(`fromJid=${fromJid};type=${type};show=${show};status=${statusMsg}`);
+            if(type==undefined && statusMsg!=null && null==fromGroupUserJid){
+                console.log("状态变化中........");
+                for(var event of this.rosterStatusEvents){
+                    event({jid:fromJid,status:statusMsg});
+                }
+            }else if(null!=fromGroupUserJid){
+                //工作组成员状态变化；
+                console.log(`工作组成员${fromGroupUserJid}fromGroupUserJid状态变化中........`);
+                for(var event of this.groupJidStatusEvents){
+                    event({groupJid:fromJid,fromGroupUserJid:fromGroupUserJid,status:statusMsg});
+                }
+            }
+        }catch(e){
+            console.log(e);
+        }
+        
     }
     sendMessage=(to,type,body)=>{
         if(this.connected){
@@ -119,6 +164,7 @@ class ChatWatcher{
     };
     //发送presence消息，加入工作组；
     joinGroup=(groupJid)=>{
+        console.log(`joinGroup,groupJid=${groupJid}`);
         this.connection.send(window.$pres({
 			from: this.myJid,
 			to: groupJid + "/" + Jid.getBareJid(this.myJid)
@@ -136,6 +182,13 @@ class ChatWatcher{
     rosterListen=(action)=>{
         this.rosterListens.push(action);
     }
+    rosterStatusEvent=(event)=>{
+        this.rosterStatusEvents.push(event);
+    }
+    groupJidStatusEvent=(event)=>{
+        this.groupJidStatusEvents.push(event);
+    }
+    
 }
 window.ChatWatcher = new ChatWatcher();
 export default window.ChatWatcher;

@@ -36,6 +36,23 @@ export default{
             return{...state,roster2messages:roster2messages};
         },
         getRosters(state,{payload:{rosters}}){
+            console.log(rosters);
+            //rosters {
+            //     jid:'',
+            //     status:'',
+            // }
+            rosters = rosters.map((item)=>{
+                return {jid:item,status:'离线'};
+            })
+            return{...state,rosters:rosters};
+        },
+        rosterStatusEvent(state,{payload:{roster}}){
+            let rosters  = state.rosters.map((item)=>{
+                if(item.jid==Jid.getBareJid(roster.jid)){
+                    item.status=roster.status;
+                }
+                return item;
+            });
             return{...state,rosters:rosters};
         },
         getRoster2Messages(state,{payload:{chat_roster}}){
@@ -46,7 +63,7 @@ export default{
                 return fromBareJid==state.chat_roster || toBareJid==state.chat_roster;
             });
             return{...state,roster2messages:roster2messages,chat_roster:chat_roster};
-        }
+        },
     },
     effects:{
         *fetchRosters({payload:id},{put,select,call}){
@@ -89,6 +106,14 @@ export default{
                 dispatch({
                     type:'chat/getRosters',
                     payload:{rosters:[rosters]},
+                });
+            });
+        },
+        rosterStatusEventWatcher({dispatch}){
+            return window.ChatWatcher.rosterStatusEvent((rosters)=>{
+                dispatch({
+                    type:'chat/rosterStatusEvent',
+                    payload:{roster:rosters},
                 });
             });
         },
