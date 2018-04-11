@@ -1,0 +1,10 @@
+.groupchat_form{
+    display:flex;
+}
+
+.send_message{
+    display: flex;
+}
+.send_message_field{
+    flex:1;
+}

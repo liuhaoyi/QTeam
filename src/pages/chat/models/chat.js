@@ -20,16 +20,6 @@ export default{
         send(state,{payload:{recv_messages}}){
             state.recv_messages = state.recv_messages.concat(recv_messages);
             let roster2messages = state.recv_messages.filter((item)=>{
-                // let pos = item.from.indexOf('/');
-                // let fromBareJid = item.from;
-                // if(pos>0) {
-                //     fromBareJid = item.from.substring(0,pos);
-                // }
-                // pos = item.to.indexOf('/');
-                // let toBareJid = item.to;
-                // if(pos>0) {
-                //     toBareJid = item.to.substring(0,pos);
-                // }
                 let fromBareJid = Jid.getBareJid(item.from);
                 let toBareJid = Jid.getBareJid(item.to);
                 return fromBareJid==state.chat_roster || toBareJid==state.chat_roster;

@@ -20,6 +20,9 @@ function Header({location}){
             <Menu.Item key="/chat">
                 <Link to="/chat">chat</Link>
             </Menu.Item>
+            <Menu.Item key="/groupchat">
+                <Link to="/groupchat">groupchat</Link>
+            </Menu.Item>
             <Menu.Item key="/404">
                 <Link to="/page-you-dont-know"><Icon type="frown-circle" />404</Link>
             </Menu.Item>
