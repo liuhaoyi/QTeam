@@ -15,6 +15,7 @@ export default{
         send_message:'',
         chat_roster:'',
         roster2messages:[],
+        isChatClicked:false,
     },
     reducers:{
         send(state,{payload:{recv_messages}}){
@@ -41,6 +42,7 @@ export default{
             //     jid:'',
             //     status:'',
             // }
+            state.isChatClicked = true;
             rosters = rosters.map((item)=>{
                 return {jid:item,status:'离线'};
             })
@@ -67,17 +69,22 @@ export default{
     },
     effects:{
         *fetchRosters({payload:id},{put,select,call}){
-            const {data,headers} = yield call(service.fetchRosters,id);
+            const isChatClicked = yield select(state => state.chat.isChatClicked);
 
-            let rosters = data.map((item)=>{
-                return item.userName;
-            });
-            yield put({
-                type:'getRosters',
-                payload:{
-                    rosters,
-                },
-            });
+            if(!isChatClicked){
+         
+                const {data,headers} = yield call(service.fetchRosters,id);
+
+                let rosters = data.map((item)=>{
+                    return item.userName;
+                });
+                yield put({
+                    type:'getRosters',
+                    payload:{
+                        rosters,
+                    },
+                });
+            }
         }
     },
     subscriptions:{

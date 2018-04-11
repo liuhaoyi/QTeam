@@ -42,7 +42,7 @@ class GroupChat extends React.Component{
             payload:{selected_group:{groupJid:e.key,groupName:e.key}},
         });
         this.props.dispatch({
-            type:'groupchat/fetchGroupMemberByGroupId',
+            type:'groupchat/group2Members',
             payload:{selected_group:{groupJid:e.key,groupName:e.key}},
         });
     }

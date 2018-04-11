@@ -10,7 +10,7 @@ export default{
         groups:[],
         groupMembers:[],
         group2Members:[],
-
+        isGroupChatClicked:false,
         // {
         //     groupId:'',
         //     groupMember:[
@@ -61,13 +61,13 @@ export default{
             });
             return{...state,group2messages:group2messages,selected_group:selected_group};
         },
-        getGroups(state,{payload:{groups}}){
-            console.log("grouchat-model-groups");
+        getGroups(state,{payload:{groups,groupMembers}}){
+            state.isGroupChatClicked=true;
             //发送presence消息加入工作组；
             groups.map((item)=>{
                 window.ChatWatcher.joinGroup(item.groupJid);
             });
-            return{...state,groups:groups};
+            return{...state,groups:groups,groupMembers:groupMembers};
         },
         getGroupMemberByGroupId(state,{payload:{groupId,groupMembers}}){
             state.groupMembers = groupMembers.concat({groupId:groupId,groupMember:groupMembers});
@@ -104,16 +104,29 @@ export default{
         },
     },
     effects:{
-        *fetchGroupByUserName({payload:{userName}},{put,call}){
-            const {data,headers} = yield call(service.fetchGroupByUserName,userName);
+        *fetchGroupByUserName({payload:{userName}},{put,call,select}){
+            const _isGroupChatClicked=yield select(state=>state.groupchat.isGroupChatClicked);
 
-           
-            yield put({
-                type:'getGroups',
-                payload:{
-                    groups:data,
-                },
-            });
+            if(!_isGroupChatClicked){
+                const {data,headers} = yield call(service.fetchGroupByUserName,userName);
+                let group_data = data;
+                let _array = new Array();
+                for(var _group of group_data){
+                    const {data,headers} = yield call(service.getGroupMemberByGroupId,_group.groupJid);
+                    let _data = data.map((item)=>{
+                        return {...item,status:'离线'};
+                    });
+                    _array = _array.concat(_data);
+                }
+
+                yield put({
+                    type:'getGroups',
+                    payload:{
+                        groups:group_data,
+                        groupMembers:_array,
+                    },
+                });
+            }
         },
         *fetchGroupMemberByGroupId({payload:{selected_group}},{put,call}){
             const {data,headers} = yield call(service.getGroupMemberByGroupId,selected_group.groupJid);
@@ -130,7 +143,7 @@ export default{
         },
     },
     subscriptions:{
-        setupGroupChat({dispatch,history}){
+        setupGroupChat({dispatch,history,location}){
             return history.listen(({pathname,query})=>{
                 if(pathname==='/groupchat'){
                     dispatch({ 
